@@ -368,23 +368,36 @@
   // Número de WhatsApp que recebe os agendamentos (com DDI + DDD, só números)
   const WHATS_NUMBER = "5535997545071";
 
+  // URL do webhook que vai receber os dados do agendamento (pra cair na planilha).
+  // Cole aqui a URL da sua automação (n8n, Make, Zapier, Google Apps Script...).
+  // Enquanto estiver vazia ("") o site não tenta enviar, só abre o WhatsApp normalmente.
+  const WEBHOOK_URL = "https://lzin.app.n8n.cloud/webhook/agendamento";
+
   // Horário de atendimento (sexta e sábado) e intervalo entre horários, em minutos
   const HORA_INICIO = 9;   // 9h
   const HORA_FIM = 19;     // 19h
   const INTERVALO_MIN = 30; // de 30 em 30 minutos
 
-  // Lista de serviços oferecidos.
-  // Para ADICIONAR um serviço: copie uma linha "{name: ..., desc: ...}," e edite o texto.
+  // Lista de serviços oferecidos, com preço.
+  // Para ADICIONAR um serviço: copie uma linha "{name: ..., price: ...}," e edite.
   // Para REMOVER um serviço: apague a linha inteira dele.
+  // O preço fica em número (sem "R$"), o site formata sozinho.
   // A ordem aqui é a mesma ordem que aparece no site.
   const services = [
-    {name:"Corte", desc:"Cabelo"},
-    {name:"Barba", desc:"Aparo e navalha"},
-    {name:"Corte + Barba", desc:"Combo completo"},
-    {name:"Luzes", desc:"Descoloração"},
-    {name:"Pigmentação", desc:"Cobertura e realce"},
-    {name:"Sobrancelha", desc:"Acabamento"},
-    // {name:"Novo serviço", desc:"Descrição curta"},
+    {name:"Corte", price:25},
+    {name:"Sobrancelha", price:5},
+    {name:"Pigmentação", price:25},
+    {name:"Luzes", price:75},
+    {name:"Nevol", price:120},
+    {name:"Barba", price:18},
+    {name:"Bigode", price:5},
+    {name:"Pezinho perfil", price:10},
+    {name:"Depilação de nariz", price:10},
+    {name:"Depilação de orelha", price:10},
+    {name:"Máscara preta", price:10},
+    {name:"Hidratação", price:15},
+    {name:"Alisamento", price:30},
+    // {name:"Novo serviço", price:0},
   ];
 
   // ======================================================
@@ -394,15 +407,19 @@
   const chipsEl = document.getElementById('chips');
   let selectedService = null;
 
+  function formatPrice(v){
+    return v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+
   services.forEach((s, i) => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'chip';
-    btn.innerHTML = `<span class="chip-name">${s.name}</span><span class="chip-desc">${s.desc}</span>`;
+    btn.innerHTML = `<span class="chip-name">${s.name}</span><span class="chip-desc">R$ ${formatPrice(s.price)}</span>`;
     btn.addEventListener('click', () => {
       document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
       btn.classList.add('selected');
-      selectedService = s.name;
+      selectedService = s;
       updateSummary();
     });
     chipsEl.appendChild(btn);
@@ -465,18 +482,26 @@
 
   function updateSummary(){
     if(selectedService && nomeEl.value.trim()){
-      resumoEl.textContent = `${nomeEl.value.trim()} · ${selectedService} · ${diaSelect.value} às ${horarioSelect.value}`;
+      resumoEl.textContent = `${nomeEl.value.trim()} · ${selectedService.name} (R$ ${formatPrice(selectedService.price)}) · ${diaSelect.value} às ${horarioSelect.value}`;
     } else {
       resumoEl.textContent = '';
     }
   }
   [nomeEl, diaSelect, horarioSelect].forEach(el => el.addEventListener('input', updateSummary));
 
-  document.getElementById('agendar').addEventListener('submit', function(e){
+  const submitBtn = document.querySelector('.submit-btn');
+  const submitBtnOriginalHTML = submitBtn.innerHTML;
+
+  function mostrarErro(msg){
+    erroEl.textContent = msg;
+    erroEl.classList.add('show');
+  }
+
+  document.getElementById('agendar').addEventListener('submit', async function(e){
     e.preventDefault();
 
     if(!selectedService || !nomeEl.value.trim()){
-      erroEl.classList.add('show');
+      mostrarErro('Preencha seu nome e escolha um serviço antes de enviar.');
       return;
     }
     erroEl.classList.remove('show');
@@ -487,10 +512,40 @@
     const horario = horarioSelect.value;
     const obs = obsEl.value.trim();
 
+    // Dados do agendamento — é isso que vai tanto pra mensagem do WhatsApp
+    // quanto pro webhook da planilha.
+    const agendamento = {
+      nome: nome,
+      telefone: telefone,
+      servico: selectedService.name,
+      preco: selectedService.price,
+      dia: dia,
+      horario: horario,
+      observacoes: obs,
+      enviado_em: new Date().toISOString()
+    };
+
+    // Se tiver webhook configurado, espera a resposta dele antes de continuar
+    // (é lá que o n8n confirma se o horário está livre ou já foi reservado).
+    if(WEBHOOK_URL){
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Verificando horário...';
+
+      const resultado = await verificarEEnviar(agendamento);
+
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = submitBtnOriginalHTML;
+
+      if(!resultado.ok){
+        mostrarErro(resultado.message || 'Esse horário já foi reservado, escolha outro dia ou horário.');
+        return; // não abre o WhatsApp
+      }
+    }
+
     let msg = `Olá! Gostaria de agendar um horário na Barbearia do Alemão.\n\n`;
     msg += `Nome: ${nome}\n`;
     if(telefone) msg += `Contato: ${telefone}\n`;
-    msg += `Serviço: ${selectedService}\n`;
+    msg += `Serviço: ${selectedService.name} (R$ ${formatPrice(selectedService.price)})\n`;
     msg += `Dia: ${dia}\n`;
     msg += `Horário: ${horario}\n`;
     if(obs) msg += `Observações: ${obs}\n`;
@@ -498,6 +553,31 @@
     const url = `https://wa.me/${WHATS_NUMBER}?text=${encodeURIComponent(msg)}`;
     window.open(url, '_blank');
   });
+
+  // Manda o agendamento pro webhook e espera a resposta.
+  // Retorna { ok: true } se pode seguir, ou { ok: false, message } se o horário
+  // já está ocupado (segundo o que o n8n responder).
+  // Se o webhook der erro de conexão, deixa o cliente seguir mesmo assim,
+  // pra não travar o agendamento por causa de instabilidade.
+  async function verificarEEnviar(agendamento){
+    try{
+      const resposta = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(agendamento)
+      });
+
+      const dados = await resposta.json().catch(() => ({}));
+
+      if(!resposta.ok || dados.success === false){
+        return { ok: false, message: dados.message };
+      }
+      return { ok: true };
+    } catch(err){
+      console.error('Não foi possível falar com o webhook:', err);
+      return { ok: true };
+    }
+  }
 </script>
 </body>
 </html>
