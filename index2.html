@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barbearia do Alemão — Agendamento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-black:#0a0a0c;
+    --bg-black-2:#111114;
+    --off-white:#f4f3ee;
+    --line:#2a2a2f;
+    --blue:#3f8dff;
+    --blue-glow:rgba(63,141,255,0.55);
+    --blue-soft:rgba(63,141,255,0.12);
+    --muted:#9a9aa3;
+    --danger:#ff6b6b;
+    --radius:14px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg-black);
+    color:var(--off-white);
+    font-family:'Quicksand', sans-serif;
+    font-weight:500;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  h1,h2,h3, .cta-text, .chip-name, .brand{
+    font-weight:700;
+  }
+
+  /* ---------- animações ---------- */
+  @keyframes fadeInUp{
+    from{opacity:0; transform:translateY(18px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  @keyframes pulseGlow{
+    0%,100%{box-shadow:0 0 0 1px rgba(255,255,255,0.08), 0 10px 30px var(--blue-glow);}
+    50%{box-shadow:0 0 0 1px rgba(255,255,255,0.08), 0 16px 44px var(--blue-glow);}
+  }
+  @keyframes chipPop{
+    0%{transform:scale(1);}
+    45%{transform:scale(1.06);}
+    100%{transform:scale(1);}
+  }
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-4px);}
+    40%{transform:translateX(4px);}
+    60%{transform:translateX(-3px);}
+    80%{transform:translateX(3px);}
+  }
+  @keyframes spin{
+    to{transform:rotate(360deg);}
+  }
+  @keyframes stripeMove{
+    from{background-position:0 0, 0 7px, 7px -7px, -7px 0px;}
+    to{background-position:28px 0, 28px 7px, 35px -7px, 21px 0px;}
+  }
+  .spinner{
+    display:inline-block;
+    width:14px;
+    height:14px;
+    margin-right:2px;
+    border:2px solid rgba(244,243,238,0.35);
+    border-top-color:#f4f3ee;
+    border-radius:50%;
+    animation:spin .7s linear infinite;
+    vertical-align:middle;
+  }
+
+  /* ---------- checkerboard motif ---------- */
+  .checker-strip{
+    height:14px;
+    width:100%;
+    background-image:
+      linear-gradient(45deg, var(--off-white) 25%, transparent 25%),
+      linear-gradient(-45deg, var(--off-white) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, var(--off-white) 75%),
+      linear-gradient(-45deg, transparent 75%, var(--off-white) 75%);
+    background-size:14px 14px;
+    background-position:0 0, 0 7px, 7px -7px, -7px 0px;
+    background-color:#0a0a0c;
+    opacity:0.9;
+    animation:stripeMove 3s linear infinite;
+  }
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;
+    padding:56px 20px 40px;
+    text-align:center;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(63,141,255,0.16), transparent 60%),
+      var(--bg-black);
+    border-bottom:1px solid var(--line);
+    animation:fadeInUp .7s ease both;
+  }
+  .eyebrow{
+    letter-spacing:0.35em;
+    text-transform:uppercase;
+    font-size:12px;
+    color:var(--blue);
+    margin-bottom:14px;
+  }
+  .brand{
+    font-size:clamp(34px, 8vw, 58px);
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    margin:0;
+    line-height:1.05;
+  }
+  .brand span{color:var(--blue);}
+  .tagline{
+    color:var(--muted);
+    font-size:16px;
+    margin:14px auto 28px;
+    max-width:460px;
+    font-weight:500;
+  }
+  .hero-cta{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    background:var(--blue);
+    color:#05070d;
+    padding:14px 28px;
+    border-radius:999px;
+    font-weight:700;
+    text-decoration:none;
+    font-size:15px;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.08), 0 10px 30px var(--blue-glow);
+    transition:transform .15s ease, box-shadow .15s ease;
+    animation:pulseGlow 2.6s ease-in-out infinite;
+  }
+  .hero-cta:hover{transform:translateY(-2px); box-shadow:0 0 0 1px rgba(255,255,255,0.12), 0 14px 36px var(--blue-glow);}
+
+  /* ---------- info bar ---------- */
+  .info-bar{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:10px;
+    padding:22px 16px;
+    max-width:900px;
+    margin:0 auto;
+    animation:fadeInUp .7s ease both;
+    animation-delay:.1s;
+  }
+  .info-pill{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--bg-black-2);
+    border:1px solid var(--line);
+    padding:10px 16px;
+    border-radius:999px;
+    font-size:13.5px;
+    color:var(--off-white);
+    transition:transform .15s ease, border-color .15s ease;
+  }
+  .info-pill:hover{transform:translateY(-2px); border-color:var(--blue);}
+  .info-pill svg{flex:none;}
+
+  /* ---------- main layout ---------- */
+  main{
+    max-width:640px;
+    margin:0 auto;
+    padding:10px 18px 60px;
+  }
+
+  .card{
+    background:var(--off-white);
+    color:#141416;
+    border-radius:22px;
+    padding:30px 24px 34px;
+    margin-top:26px;
+    box-shadow:0 30px 60px rgba(0,0,0,0.45);
+    animation:fadeInUp .7s ease both;
+    animation-delay:.2s;
+  }
+  .card h2{
+    font-size:23px;
+    margin:0 0 4px;
+    text-transform:uppercase;
+    letter-spacing:0.02em;
+  }
+  .card .sub{
+    color:#5c5c63;
+    font-size:14px;
+    margin:0 0 24px;
+    font-weight:500;
+  }
+
+  .walkin-note{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    background:var(--blue-soft);
+    border:1px solid rgba(63,141,255,0.35);
+    color:#12335e;
+    padding:12px 14px;
+    border-radius:12px;
+    font-size:13px;
+    margin-bottom:24px;
+    font-weight:600;
+    line-height:1.5;
+  }
+  .walkin-note svg{flex:none; margin-top:2px;}
+
+  label{
+    display:block;
+    font-size:12.5px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    font-weight:700;
+    color:#3a3a40;
+    margin:20px 0 9px;
+  }
+  label.first{margin-top:0;}
+
+  /* service chips */
+  .chips{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .chip{
+    position:relative;
+    border:1.5px solid #dcdcd4;
+    background:#fff;
+    border-radius:12px;
+    padding:13px 30px 13px 12px;
+    cursor:pointer;
+    text-align:left;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    transition:border-color .15s ease, box-shadow .15s ease, background .15s ease, transform .1s ease;
+  }
+  .chip:hover{border-color:var(--blue); transform:translateY(-1px);}
+  .chip:active{transform:scale(0.97);}
+  .chip.selected{
+    border-color:var(--blue);
+    background:#eef5ff;
+    box-shadow:0 0 0 3px var(--blue-soft), 0 6px 18px var(--blue-glow);
+  }
+  .chip.just-selected{animation:chipPop .3s ease;}
+  .chip-check{
+    position:absolute;
+    top:8px;
+    right:8px;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:var(--blue);
+    color:#fff;
+    font-size:11px;
+    line-height:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    transform:scale(0.4);
+    transition:opacity .18s ease, transform .18s ease;
+  }
+  .chip.selected .chip-check{opacity:1; transform:scale(1);}
+  .chip-name{font-size:14.5px; color:#141416;}
+  .chip-desc{font-size:11.5px; color:#77777e; font-weight:500;}
+
+  input[type="text"], input[type="tel"], select, textarea{
+    width:100%;
+    font-family:'Quicksand', sans-serif;
+    font-weight:600;
+    font-size:15px;
+    padding:13px 14px;
+    border-radius:12px;
+    border:1.5px solid #dcdcd4;
+    background:#fff;
+    color:#141416;
+    outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  input::placeholder, textarea::placeholder{color:#a5a5ab; font-weight:500;}
+  input:focus, select:focus, textarea:focus{
+    border-color:var(--blue);
+    box-shadow:0 0 0 3px var(--blue-soft);
+  }
+  textarea{resize:vertical; min-height:70px;}
+
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  @media (max-width:420px){ .row2{grid-template-columns:1fr;} }
+
+  .error{
+    color:var(--danger);
+    font-size:12.5px;
+    font-weight:700;
+    margin-top:8px;
+    display:none;
+  }
+  .error.show{display:block; animation:shake .35s ease;}
+
+  .submit-btn{
+    width:100%;
+    margin-top:28px;
+    background:#141416;
+    color:var(--off-white);
+    border:none;
+    border-radius:14px;
+    padding:17px 20px;
+    font-family:'Quicksand', sans-serif;
+    font-weight:700;
+    font-size:15.5px;
+    letter-spacing:0.02em;
+    text-transform:uppercase;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease, background .15s ease;
+  }
+  .submit-btn:hover{background:#000; box-shadow:0 12px 30px rgba(63,141,255,0.35); transform:translateY(-1px);}
+  .submit-btn:active{transform:scale(0.98);}
+  .submit-btn svg{flex:none;}
+
+  .summary{
+    margin-top:16px;
+    font-size:12.5px;
+    color:#6a6a70;
+    text-align:center;
+    font-weight:600;
+    min-height:16px;
+  }
+
+  footer{
+    text-align:center;
+    padding:38px 20px 46px;
+    color:var(--muted);
+    font-size:13px;
+    animation:fadeInUp .7s ease both;
+    animation-delay:.3s;
+  }
+  footer a{color:var(--blue); text-decoration:none; font-weight:700;}
+  footer .addr{margin-top:6px; font-weight:500;}
+
+  @media (max-width:380px){
+    .chips{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="checker-strip"></div>
+
+  <section class="hero">
+    <div class="eyebrow">João Otávio · Barbeiro</div>
+    <h1 class="brand">Barbearia<br><span>do Alemão</span></h1>
+    <p class="tagline">Agende seu horário em segundos e confirme direto no WhatsApp do barbeiro.</p>
+    <a class="hero-cta" href="#agendar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 12h12M12 6v12" stroke="#05070d" stroke-width="2.4" stroke-linecap="round"/></svg>
+      Agendar corte
+    </a>
+  </section>
+
+  <div class="info-bar">
+    <div class="info-pill">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3f8dff" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+      Rua Zeferino Luís da Silva, Planalto 36
+    </div>
+    <div class="info-pill">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3f8dff" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      Ter–Qui: ordem de chegada · Sex–Sáb: horário marcado
+    </div>
+    <div class="info-pill">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3f8dff" stroke-width="2"><path d="M3 5c0 9 7 16 16 16l3-5-6-2-2 2c-3-1-6-4-7-7l2-2-2-6z"/></svg>
+      (35) 99754-5071
+    </div>
+  </div>
+
+  <main>
+    <form class="card" id="agendar" novalidate>
+      <h2>Agende seu horário</h2>
+      <p class="sub">Sexta e sábado funcionam com horário marcado. Terça a quinta é por ordem de chegada — não precisa agendar.</p>
+
+      <div class="walkin-note">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#12335e" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5l3.5 2"/></svg>
+        <span>Este agendamento é só para <strong>sexta-feira</strong> e <strong>sábado</strong>, que são os dias com horário marcado.</span>
+      </div>
+
+      <label class="first">Quais serviços? <span style="text-transform:none; letter-spacing:0; font-weight:600; color:#8a8a90;">(pode escolher mais de um)</span></label>
+      <div class="chips" id="chips"></div>
+
+      <label>Seu nome</label>
+      <input type="text" id="nome" placeholder="Como podemos te chamar?">
+
+      <label>Seu WhatsApp</label>
+      <input type="tel" id="telefone" placeholder="(35) 9 9999-9999">
+
+      <div class="row2">
+        <div>
+          <label>Dia</label>
+          <select id="dia"></select>
+        </div>
+        <div>
+          <label>Horário</label>
+          <select id="horario"></select>
+        </div>
+      </div>
+
+      <label>Observações (opcional)</label>
+      <textarea id="obs" placeholder="Ex: degradê baixo, igual da última vez..."></textarea>
+
+      <div class="error" id="erro">Preencha seu nome e escolha ao menos um serviço antes de enviar.</div>
+
+      <button type="submit" class="submit-btn">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#f4f3ee" stroke-width="2"><path d="M3 5c0 9 7 16 16 16l3-5-6-2-2 2c-3-1-6-4-7-7l2-2-2-6z"/></svg>
+        Enviar para o WhatsApp
+      </button>
+      <p class="summary" id="resumo"></p>
+    </form>
+  </main>
+
+  <div class="checker-strip"></div>
+
+  <footer>
+    <div><a href="https://instagram.com/barbeariadoalemao2023" target="_blank" rel="noopener">@barbeariadoalemao2023</a></div>
+    <div class="addr">Rua Zeferino Luís da Silva · Planalto, 36</div>
+  </footer>
+
+<script>
+  // ======================================================
+  //  CONFIGURAÇÕES DA BARBEARIA — edite só aqui
+  // ======================================================
+
+  // Número de WhatsApp que recebe os agendamentos (com DDI + DDD, só números)
+  const WHATS_NUMBER = "5535997545071";
+
+  // URL do webhook que vai receber os dados do agendamento (pra cair na planilha).
+  // Cole aqui a URL da sua automação (n8n, Make, Zapier, Google Apps Script...).
+  // Enquanto estiver vazia ("") o site não tenta enviar, só abre o WhatsApp normalmente.
+  const WEBHOOK_URL = "https://lzin.app.n8n.cloud/webhook/agendamento";
+
+  // Horários disponíveis (sexta e sábado).
+  // Para ADICIONAR um horário: copie uma linha "'HH:MM'," e edite.
+  // Para REMOVER um horário: apague a linha inteira dele.
+  // Para o horário de almoço: simplesmente não coloque um horário nesse intervalo
+  // (ex: pulando de "12:00" direto pra "14:00").
+  const HORARIOS_DISPONIVEIS = [
+    "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+    // -- horário de almoço (12:00 às 14:00) --
+    "14:00", "14:30", "15:00", "15:30", "16:00", "16:30",
+    "17:00", "17:30", "18:00", "18:30",
+  ];
+
+  // Lista de serviços oferecidos, com preço.
+  // Para ADICIONAR um serviço: copie uma linha "{name: ..., price: ...}," e edite.
+  // Para REMOVER um serviço: apague a linha inteira dele.
+  // O preço fica em número (sem "R$"), o site formata sozinho.
+  // A ordem aqui é a mesma ordem que aparece no site.
+  const services = [
+    {name:"Corte", price:25},
+    {name:"Sobrancelha", price:5},
+    {name:"Pigmentação", price:25},
+    {name:"Luzes", price:75},
+    {name:"Nevol", price:120},
+    {name:"Barba", price:18},
+    {name:"Bigode", price:5},
+    {name:"Pezinho perfil", price:10},
+    {name:"Depilação de nariz", price:10},
+    {name:"Depilação de orelha", price:10},
+    {name:"Máscara preta", price:10},
+    {name:"Hidratação", price:15},
+    {name:"Alisamento", price:30},
+    // {name:"Novo serviço", price:0},
+  ];
+
+  // ======================================================
+  //  Fim das configurações — o resto é o funcionamento do site
+  // ======================================================
+
+  const chipsEl = document.getElementById('chips');
+  let selectedServices = [];
+
+  function formatPrice(v){
+    return v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+
+  services.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'chip';
+    btn.innerHTML = `<span class="chip-check">✓</span><span class="chip-name">${s.name}</span><span class="chip-desc">R$ ${formatPrice(s.price)}</span>`;
+    btn.addEventListener('click', () => {
+      const idx = selectedServices.findIndex(sv => sv.name === s.name);
+      if(idx === -1){
+        selectedServices.push(s);
+        btn.classList.add('selected', 'just-selected');
+        setTimeout(() => btn.classList.remove('just-selected'), 300);
+      } else {
+        selectedServices.splice(idx, 1);
+        btn.classList.remove('selected');
+      }
+      updateSummary();
+    });
+    chipsEl.appendChild(btn);
+  });
+
+  // Build "Dia" options: next available Fridays and Saturdays
+  const diaSelect = document.getElementById('dia');
+  const dayNames = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const monthNames = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+  function buildDateOptions(){
+    // Só entram sexta (5) e sábado (6) na lista de dias, porque de terça a quinta
+    // é por ordem de chegada e não precisa agendar.
+    const opts = [];
+    let d = new Date();
+    d.setHours(0,0,0,0);
+    let count = 0;
+    let i = 0;
+    while(count < 8 && i < 30){
+      const day = d.getDay();
+      if(day === 5 || day === 6){
+        const label = `${dayNames[day]}, ${d.getDate()} de ${monthNamesFull(d.getMonth())}`;
+        const value = `${label}`;
+        opts.push({label, value: `${dayNames[day]} (${d.getDate()}/${d.getMonth()+1})`});
+        count++;
+      }
+      d.setDate(d.getDate()+1);
+      i++;
+    }
+    return opts;
+  }
+  function monthNamesFull(m){
+    const arr = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    return arr[m];
+  }
+
+  buildDateOptions().forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o.value;
+    opt.textContent = o.label;
+    diaSelect.appendChild(opt);
+  });
+
+  // Build "Horário" options (usa a lista HORARIOS_DISPONIVEIS lá de cima)
+  const horarioSelect = document.getElementById('horario');
+  HORARIOS_DISPONIVEIS.forEach(h => {
+    const opt = document.createElement('option');
+    opt.value = h;
+    opt.textContent = h;
+    horarioSelect.appendChild(opt);
+  });
+
+  const nomeEl = document.getElementById('nome');
+  const telEl = document.getElementById('telefone');
+  const obsEl = document.getElementById('obs');
+  const erroEl = document.getElementById('erro');
+  const resumoEl = document.getElementById('resumo');
+
+  function updateSummary(){
+    if(selectedServices.length && nomeEl.value.trim()){
+      const nomesServicos = selectedServices.map(s => s.name).join(', ');
+      const total = selectedServices.reduce((soma, s) => soma + s.price, 0);
+      resumoEl.textContent = `${nomeEl.value.trim()} · ${nomesServicos} (R$ ${formatPrice(total)}) · ${diaSelect.value} às ${horarioSelect.value}`;
+    } else {
+      resumoEl.textContent = '';
+    }
+  }
+  [nomeEl, diaSelect, horarioSelect].forEach(el => el.addEventListener('input', updateSummary));
+
+  const submitBtn = document.querySelector('.submit-btn');
+  const submitBtnOriginalHTML = submitBtn.innerHTML;
+
+  function mostrarErro(msg){
+    erroEl.textContent = msg;
+    erroEl.classList.remove('show');
+    void erroEl.offsetWidth; // força o navegador a "resetar" antes de animar de novo
+    erroEl.classList.add('show');
+  }
+
+  document.getElementById('agendar').addEventListener('submit', async function(e){
+    e.preventDefault();
+
+    if(!selectedServices.length || !nomeEl.value.trim()){
+      mostrarErro('Preencha seu nome e escolha ao menos um serviço antes de enviar.');
+      return;
+    }
+    erroEl.classList.remove('show');
+
+    const nome = nomeEl.value.trim();
+    const telefone = telEl.value.trim();
+    const dia = diaSelect.value;
+    const horario = horarioSelect.value;
+    const obs = obsEl.value.trim();
+    const nomesServicos = selectedServices.map(s => s.name).join(', ');
+    const totalPreco = selectedServices.reduce((soma, s) => soma + s.price, 0);
+
+    // Dados do agendamento — é isso que vai tanto pra mensagem do WhatsApp
+    // quanto pro webhook da planilha.
+    const agendamento = {
+      nome: nome,
+      telefone: telefone,
+      servicos: nomesServicos,
+      preco_total: totalPreco,
+      dia: dia,
+      horario: horario,
+      observacoes: obs,
+      enviado_em: new Date().toISOString()
+    };
+
+    // Se tiver webhook configurado, espera a resposta dele antes de continuar
+    // (é lá que o n8n confirma se o horário está livre ou já foi reservado).
+    if(WEBHOOK_URL){
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span class="spinner"></span> Verificando horário...`;
+
+      const resultado = await verificarEEnviar(agendamento);
+
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = submitBtnOriginalHTML;
+
+      if(!resultado.ok){
+        mostrarErro(resultado.message || 'Esse horário já foi reservado, escolha outro dia ou horário.');
+        return; // não abre o WhatsApp
+      }
+    }
+
+    let msg = `Olá! Gostaria de agendar um horário na Barbearia do Alemão.\n\n`;
+    msg += `Nome: ${nome}\n`;
+    if(telefone) msg += `Contato: ${telefone}\n`;
+    msg += `Serviços: ${nomesServicos} (R$ ${formatPrice(totalPreco)})\n`;
+    msg += `Dia: ${dia}\n`;
+    msg += `Horário: ${horario}\n`;
+    if(obs) msg += `Observações: ${obs}\n`;
+
+    const url = `https://wa.me/${WHATS_NUMBER}?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+  });
+
+  // Manda o agendamento pro webhook e espera a resposta.
+  // Retorna { ok: true } se pode seguir, ou { ok: false, message } se o horário
+  // já está ocupado (segundo o que o n8n responder).
+  // Se o webhook der erro de conexão, deixa o cliente seguir mesmo assim,
+  // pra não travar o agendamento por causa de instabilidade.
+  async function verificarEEnviar(agendamento){
+    try{
+      const resposta = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(agendamento)
+      });
+
+      const dados = await resposta.json().catch(() => ({}));
+
+      if(!resposta.ok || dados.success === false){
+        return { ok: false, message: dados.message };
+      }
+      return { ok: true };
+    } catch(err){
+      console.error('Não foi possível falar com o webhook:', err);
+      return { ok: true };
+    }
+  }
+</script>
+</body>
+</html>
