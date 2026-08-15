@@ -373,10 +373,17 @@
   // Enquanto estiver vazia ("") o site não tenta enviar, só abre o WhatsApp normalmente.
   const WEBHOOK_URL = "https://lzin.app.n8n.cloud/webhook/agendamento";
 
-  // Horário de atendimento (sexta e sábado) e intervalo entre horários, em minutos
-  const HORA_INICIO = 9;   // 9h
-  const HORA_FIM = 19;     // 19h
-  const INTERVALO_MIN = 30; // de 30 em 30 minutos
+  // Horários disponíveis (sexta e sábado).
+  // Para ADICIONAR um horário: copie uma linha "'HH:MM'," e edite.
+  // Para REMOVER um horário: apague a linha inteira dele.
+  // Para o horário de almoço: simplesmente não coloque um horário nesse intervalo
+  // (ex: pulando de "12:00" direto pra "14:00").
+  const HORARIOS_DISPONIVEIS = [
+    "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+    // -- horário de almoço (12:00 às 14:00) --
+    "14:00", "14:30", "15:00", "15:30", "16:00", "16:30",
+    "17:00", "17:30", "18:00", "18:30",
+  ];
 
   // Lista de serviços oferecidos, com preço.
   // Para ADICIONAR um serviço: copie uma linha "{name: ..., price: ...}," e edite.
@@ -463,16 +470,14 @@
     diaSelect.appendChild(opt);
   });
 
-  // Build "Horário" options (usa HORA_INICIO / HORA_FIM / INTERVALO_MIN lá de cima)
+  // Build "Horário" options (usa a lista HORARIOS_DISPONIVEIS lá de cima)
   const horarioSelect = document.getElementById('horario');
-  for(let mins = HORA_INICIO*60; mins <= HORA_FIM*60; mins += INTERVALO_MIN){
-    const h = Math.floor(mins/60).toString().padStart(2,'0');
-    const m = (mins%60).toString().padStart(2,'0');
+  HORARIOS_DISPONIVEIS.forEach(h => {
     const opt = document.createElement('option');
-    opt.value = `${h}:${m}`;
-    opt.textContent = `${h}:${m}`;
+    opt.value = h;
+    opt.textContent = h;
     horarioSelect.appendChild(opt);
-  }
+  });
 
   const nomeEl = document.getElementById('nome');
   const telEl = document.getElementById('telefone');
